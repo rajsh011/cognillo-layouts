@@ -1,0 +1,7 @@
+sub_category_label:
+  default: "Sub Categories"
+  description: "Label for Sub Category ( Left empty to use default )"
+category_label:
+  default: "Product Help & Support"
+  description: "Label To Replace with Category ( Left empty to use default )"
+  

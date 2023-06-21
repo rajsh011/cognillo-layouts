@@ -1,0 +1,556 @@
+
+    <!--  override categories-and-latest-topics -->
+    <script type="text/x-handlebars" data-template-name="components/categories-and-latest-topics">
+        <div class="column categories">
+        <CategoriesOnly @categories={{this.categories}}  @cstLabel={{ " Product Help & Support " }} @filterCats= {{ true }} @catA= {{ 13 }}  @catB= {{ 5 }} @catC= {{ 6 }}/>
+        
+        <CategoriesOnly @categories={{this.categories}} @cstLabel={{ " Installation and Configuration " }} @filterCats= {{ true }} @catA= {{ 4 }}  @catB= {{ 2 }} @catC= {{ 3 }}/>
+    </div>
+    
+    <div class="column">
+    <CategoriesTopicList @topics={{this.topics}} @filter="latest" @class="latest-topic-list" />
+    </div>
+    
+    <PluginOutlet @name="extra-categories-column" @connectorTagName="div" />
+    </script>   
+    
+    
+    
+    <!-- override categories-only component -->
+    <script type="text/x-handlebars" data-template-name="components/categories-only">
+    {{#if this.categories}}
+        
+    {{#if this.filteredCategories}}
+        <table class="category-list {{if this.showTopics "with-topics"}}">
+        <thead>
+            <tr>
+            {{#if this.cstLabel }}
+            <th class="category"><span role="heading" aria-level="2" id="categories-only-category">
+            <h3 class="cst_label"> {{this.cstLabel}} </h3> </span></th>
+            {{else}}
+                <th class="category"><span role="heading" aria-level="2" id="categories-only-category">{{i18n "categories.category"}}</span></th>
+            {{/if }}
+            <th class="topics">{{i18n "categories.topics"}}</th>
+            {{#if this.showTopics}}
+                <th class="latest">{{i18n "categories.latest"}}</th>
+            {{/if}}
+            </tr>
+        </thead>
+        <tbody aria-labelledby="categories-only-category">
+            {{#each this.categories as |category|}} 
+        {{#if this.filterCats }}  
+            {{#if (Check_cat this.catA category.id ) }}
+            <ParentCategoryRow @category={{category}} @showTopics={{this.showTopics}} />
+            {{/if}}
+    
+            {{#if (Check_cat this.catB category.id ) }}
+            <ParentCategoryRow @category={{category}} @showTopics={{this.showTopics}} />
+            {{/if}}
+    
+            {{#if (Check_cat this.catC category.id ) }}
+            <ParentCategoryRow @category={{category}} @showTopics={{this.showTopics}} />
+                {{/if}}
+            {{else}}   
+            <ParentCategoryRow @category={{category}} @showTopics={{this.showTopics}} />
+            {{/if}}
+            {{/each}}
+        </tbody>
+        </table>
+    {{/if}}
+    
+    {{#if this.mutedCategories}}
+        <div class="muted-categories">
+        <a href class="muted-categories-link" {{on "click" this.toggleShowMuted}}>
+            <h3 class="muted-categories-heading">{{i18n "categories.muted"}}</h3>
+            {{#if this.mutedToggleIcon}}
+            {{d-icon this.mutedToggleIcon}}
+            {{/if}}
+        </a>
+        <table class="category-list {{if this.showTopics "with-topics"}} {{unless this.showMutedCategories "hidden"}}">
+            <thead>
+            <tr>
+                <th class="category"><span role="heading" aria-level="2" id="categories-only-category-muted">{{i18n "categories.category"}}</span></th>
+                <th class="topics">{{i18n "categories.topics"}}</th>
+                {{#if this.showTopics}}
+                <th class="latest">{{i18n "categories.latest"}}</th>
+                {{/if}}
+            </tr>
+            </thead>
+            <tbody aria-labelledby="categories-only-category-muted">
+            {{#each this.categories as |category|}}
+                <ParentCategoryRow @category={{category}} @showTopics={{this.showTopics}} @listType="muted" />
+            {{/each}}
+            </tbody>
+        </table>
+        </div>
+    {{/if}}
+    {{/if}}
+    
+    <PluginOutlet @name="below-categories-only" @connectorTagName="div" @args={{hash categories=this.categories showTopics=this.showTopics}} />
+    </script>
+
+            <!-- Override application template -->
+    <script type="text/x-handlebars" data-template-name="application">
+        <DiscourseRoot>
+            <a href="#main-container" id="skip-link">{{i18n "skip_to_main_content"}}</a>
+            <DDocument />
+            <PluginOutlet
+              @name="above-site-header"
+              @connectorTagName="div"
+              @outletArgs={{hash currentPath=this.router._router.currentPath}}
+            />
+          
+            {{#if this.showSiteHeader}}
+              <SiteHeader
+                @canSignUp={{this.canSignUp}}
+                @showCreateAccount={{route-action "showCreateAccount"}}
+                @showLogin={{route-action "showLogin"}}
+                @showKeyboard={{route-action "showKeyboardShortcutsHelp"}}
+                @toggleMobileView={{route-action "toggleMobileView"}}
+                @toggleAnonymous={{route-action "toggleAnonymous"}}
+                @logout={{route-action "logout"}}
+                @sidebarEnabled={{this.sidebarEnabled}}
+                @navigationMenuQueryParamOverride={{this.navigationMenuQueryParamOverride}}
+                @showSidebar={{this.showSidebar}}
+                @toggleSidebar={{action "toggleSidebar"}}
+              />
+            {{/if}}
+          
+            <SoftwareUpdatePrompt />
+          
+            {{#if this.siteSettings.enable_offline_indicator}}
+              <OfflineIndicator />
+            {{/if}}
+          
+            <PluginOutlet
+              @name="below-site-header"
+              @connectorTagName="div"
+              @outletArgs={{hash currentPath=this.router._router.currentPath}}
+            />
+          
+            <div id="main-outlet-wrapper" class="wrap" role="main">
+          
+              <div class="sidebar-wrapper">
+                {{! empty div allows for animation }}
+                {{#if (and this.sidebarEnabled this.showSidebar)}}
+                  <Sidebar @toggleSidebar={{action "toggleSidebar"}} />
+                {{/if}}
+              </div>
+          
+              <div id="main-outlet">
+                <PluginOutlet @name="above-main-container" @connectorTagName="div" />
+                <div class="container" id="main-container">
+                  {{#if this.showTop}}
+                    <CustomHtml @name="top" />
+                  {{/if}}
+                  <NotificationConsentBanner />
+                  <PwaInstallBanner />
+                  <GlobalNotice />
+                  <PluginOutlet
+                    @name="top-notices"
+                    @connectorTagName="div"
+                    @outletArgs={{hash currentPath=this.router._router.currentPath}}
+                  />
+                </div>
+          
+                {{outlet}}
+          
+                <CardContainer />
+              </div>
+            </div>
+          
+            <PluginOutlet
+              @name="above-footer"
+              @connectorTagName="div"
+              @outletArgs={{hash showFooter=this.showFooter}}
+            />
+            {{#if this.showFooter}}
+              <CustomHtml
+                @name="footer"
+                @triggerAppEvent="true"
+                @classNames="custom-footer-content"
+              />
+            {{/if}}
+            <PluginOutlet
+              @name="below-footer"
+              @connectorTagName="div"
+              @outletArgs={{hash showFooter=this.showFooter}}
+            />
+          
+            <ModalContainer />
+            <DialogHolder />
+            <TopicEntrance />
+            <ComposerContainer />
+          
+            {{#if this.showFooterNav}}
+              <FooterNav />
+            {{/if}}
+          </DiscourseRoot>
+    </script>
+            <!-- Override topic list item template -->
+    <script type="text/x-handlebars" data-template-name="list/topic-list-item.hbr">
+        {{~raw-plugin-outlet name="topic-list-before-columns"}}
+
+        {{#if bulkSelectEnabled}}
+        <td class="bulk-select topic-list-data">
+            <label for="bulk-select-{{topic.id}}">
+            <input type="checkbox" class="bulk-select" id="bulk-select-{{topic.id}}">
+            </label>
+        </td>
+        {{/if}}
+
+        {{!--
+        The `~` syntax strip spaces between the elements, making it produce
+        `<a class=topic-post-badges>Some text</a><span class=topic-post-badges>`,
+        with no space between them.
+        This causes the topic-post-badge to be considered the same word as "text"
+        at the end of the link, preventing it from line wrapping onto its own line.
+        --}}
+        <td class='main-link clearfix topic-list-data' colspan="1">
+        {{~raw-plugin-outlet name="topic-list-before-link"}}
+        <span class='link-top-line'>
+            {{~raw-plugin-outlet name="topic-list-before-status"}}
+            {{~raw "topic-status" topic=topic}}
+            {{~topic-link topic class="raw-link raw-topic-link"}}
+            {{~#if topic.featured_link}}
+            {{~topic-featured-link topic}}
+            {{~/if}}
+            {{~raw-plugin-outlet name="topic-list-after-title"}}
+            {{~raw "list/unread-indicator" includeUnreadIndicator=includeUnreadIndicator
+                                        topicId=topic.id
+                                        unreadClass=unreadClass~}}
+            {{~#if showTopicPostBadges}}
+            {{~raw "topic-post-badges" unreadPosts=topic.unread_posts unseen=topic.unseen url=topic.lastUnreadUrl newDotText=newDotText}}
+            {{~/if}}
+        </span>
+        <div class="link-bottom-line">
+            {{#unless hideCategory}}
+            {{#unless topic.isPinnedUncategorized}}
+                {{~raw-plugin-outlet name="topic-list-before-category"}}
+                {{category-link topic.category}}
+            {{/unless}}
+            {{/unless}}
+            {{discourse-tags topic mode="list" tagsForUser=tagsForUser}}
+
+            <!-- add author   -->
+            <span class="cst_author_box"> 
+            {{#each topic.featuredUsers as |poster|}}
+                {{#if poster.moreCount}}
+                    <a class="posters-more-count">{{poster.moreCount}}</a>
+                {{else}}
+
+                    {{#unless poster.extraClasses}}
+                        <span class="created_by"> by 
+                            <a href="{{poster.user.path}}" data-user-card="{{poster.user.username}}" class="{{poster.extraClasses}}">  {{poster.user.username }} </a>
+                        </span>
+                    {{/unless}}
+
+                    {{#if (Check_cat poster.extraClasses  "latest single")}}
+                        <span class="created_by"> by
+                            <a href="{{poster.user.path}}" data-user-card="{{poster.user.username}}" class="{{poster.extraClasses}}">  {{poster.user.username }} </a>
+                
+                        </span>  
+                    {{/if}}
+                {{/if}}
+            {{/each}}
+            </span>
+
+            {{raw "list/action-list" topic=topic postNumbers=topic.liked_post_numbers className="likes" icon="heart"}}
+        </div>
+
+        {{#if expandPinned}}
+            {{raw "list/topic-excerpt" topic=topic}}
+        {{/if}}
+
+        {{~raw-plugin-outlet name="topic-list-main-link-bottom"}}
+        </td>
+
+        {{~raw-plugin-outlet name="topic-list-after-main-link"}}
+
+        {{#if showPosters}}
+        {{raw "list/posters-column" posters=topic.featuredUsers}}
+        {{/if}}
+
+        {{raw "list/posts-count-column" topic=topic}}
+
+        {{#if showLikes}}
+        <td class="num likes topic-list-data">
+            {{#if hasLikes}}
+            <a href='{{topic.summaryUrl}}'>
+                {{number topic.like_count}} {{d-icon "heart"}}
+            </a>
+            {{/if}}
+        </td>
+        {{/if}}
+
+        {{#if showOpLikes}}
+        <td class="num likes">
+            {{#if hasOpLikes}}
+            <a href='{{topic.summaryUrl}}'>
+                {{number topic.op_like_count}} {{d-icon "heart"}}
+            </a>
+            {{/if}}
+        </td>
+        {{/if}}
+
+        <td class="num views {{topic.viewsHeat}} topic-list-data">
+        {{raw-plugin-outlet name="topic-list-before-view-count"}}
+        {{number topic.views numberKey="views_long"}}
+        </td>
+
+        {{raw "list/activity-column" topic=topic class="num topic-list-data" tagName="td"}}
+
+    </script>
+
+
+    <!-- Overrided topic-item posters-column -->
+    <script type="text/x-handlebars" data-template-name="list/posters-column.hbr">
+
+        <td class='posters topic-list-data'>
+            
+        </td>
+
+    </script>
+
+<!-- Custom java script code  for layout changes -->
+    <script type="text/javascript">
+    let has_useful_resources = false;
+    //hide or show side ad section on different pages
+    document.addEventListener("DOMContentLoaded", function () {
+    
+        const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+
+            //todo move this if to custom html.js 
+            if(!window.location.href.includes("/c/")){
+                    if( jQuery("table.cst_tag_list") != undefined ){
+                        jQuery("table.cst_tag_list").remove();
+                    }
+                
+                }
+
+            let el = document.querySelector(".side-ad-outlet");
+
+            
+            //pages on which you want to show sidebox
+            let showSideBoxOn= ["/c/", "/t/"] ;
+            let foundMatch = false;
+            for (let i = 0; i < showSideBoxOn.length; i++) {
+
+            if (window.location.href.includes(showSideBoxOn[i]) && ! window.location.href.includes('/edit/') ) {
+                foundMatch = true;
+                break; // stop the loop once a match is found
+            }
+            }
+
+            if (foundMatch) {
+            el.style.display = 'block';
+            } else {
+            el.style.display = 'none';
+            }
+
+        });
+        });
+        
+        const targetNode = document.querySelector("#main-outlet-wrapper");
+        if(targetNode){
+        observer.observe(targetNode, { attributes: true, childList: true, subtree: true });
+        }
+        
+        
+    });
+    
+   
+// get posts for announcement tag
+        jQuery.ajax({
+            type: 'GET',
+            url: window.location.origin+'/tag/'+'announcements'+'/l/latest.json',
+            success: function(data) {
+                console.log(data);
+                let t_html = '<ul class ="cat_topics">';
+                //counter to only show 10 topics in start
+                let counter = 1;
+                if(data.topic_list.topics.length == 0){
+                    jQuery(".side-ad-wrapper.announcements").hide();
+                }else{ 
+                    jQuery('.side-title').show();
+                jQuery.each(data.topic_list.topics, function(index, value){
+                 
+                    if(counter <= 10){
+
+                    
+                        if(value.title != ""){
+
+                        //trim title if length > 23 chars
+                        let t_title ="";
+                        if(value.title.length >= 98){
+
+                            t_title = value.title.substring(0,98) +"...";
+
+                        }else{
+
+                            t_title = value.title;
+
+                        }
+                        //get aouthor and date data 
+                        
+                        
+                        let create_date =new Date(value.created_at);
+
+                        let options = { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' };
+                        let formatted_date = create_date.toLocaleDateString('en-US', options);
+
+                        let  month = create_date.toLocaleString('default', { month: 'long' }).slice(0,3);
+                        let   year = create_date.getFullYear().toString().slice(-2);
+                        
+                        //get author data
+                        let user_id ="";
+                        let user_name ="";
+
+                        jQuery.each(value.posters,function(index,value){
+                            if(value.description.includes("Original Poster")){
+                            user_id = value.user_id;
+                                jQuery.each(data.users,function(index,value){
+                                if(value.id == user_id){
+                                    user_name = value.username;
+                                }
+                                })
+                            }
+                        });
+
+                        let temp = '<div class="creator"> <a href="/u/'+ user_name +'/summary" data-auto-route="true" >by :- '+user_name+'</a> <span class="creation_date" > on '+ formatted_date +'</span> </div>';
+
+                        t_html +='<li class="topic_items"> <a href="/t/'+ value.slug +'/'+ value.id +'" role="heading" aria-level="2" class="title" data-topic-id="'+ value.id +'"> '+ t_title+'</a>'+temp+'</li>';
+
+                        }
+                    counter++;
+                    }
+                    });
+
+                }
+                //   if(data.topic_list.topics.length > parseInt(settings.topic_list_count)){
+                // t_html +='<li class="topic_items_load_more"> <p>Load more..</p> </li>';
+                // t_html +='<li class="topic_items_show_less hidden_btn"> <p>Show less..</p> </li>';
+                //  }
+                    t_html +="</ul>";     
+                    //store html in global scope 
+
+                    jQuery(".side-ad-wrapper.announcements").append(t_html);
+                /*  if(jQuery(".sidebar-section-categories .sidebar-section-link-wrapper a[href*="+c_slug+"]").siblings(".cat_topics").length == 0){
+                    cat_item_html[c_slug] = t_html;
+
+                    jQuery(".sidebar-section-categories .sidebar-section-link-wrapper a[href*="+c_slug+"]").after(t_html);
+                    } */
+
+                /*   if(jQuery(".sidebar-section-categories .sidebar-section-link-wrapper > a[href*="+c_slug+"] .cat_drop_down_icon").length == 0 ){
+                    jQuery(".sidebar-section-categories .sidebar-section-link-wrapper > a[href*="+c_slug+"]").append('<span class="cat_drop_down_icon"><svg class="fa d-icon d-icon-angle-down svg-icon svg-string" xmlns="http://www.w3.org/2000/svg"><use href="#angle-down"></use></svg></span>');
+                    } */
+                
+                }
+            });
+    
+    
+// get posts for Recommendation tag
+         jQuery.ajax({  
+                type: 'GET',
+                url: window.location.origin+'/tag/'+'recommendations'+'/l/latest.json',
+                success: function(data) {
+
+                    console.log(data);
+                    let t_html = '<ul class ="cat_topics">';
+                    //counter to only show 10 topics in start
+                    let counter = 1;
+
+                     if(data.topic_list.topics.length == 0){
+                         jQuery(".side-ad-wrapper.recommendations").hide();
+                     }else{
+                        jQuery('.side-title').show();
+                        jQuery.each(data.topic_list.topics, function(index, value){
+                     if(counter <= 10){
+                        if(value.title != ""){
+
+                        //trim title if length > 23 chars
+                        let t_title ="";
+                        if(value.title.length >= 98){
+
+                            t_title = value.title.substring(0,98) +"...";
+
+                        }else{
+
+                            t_title = value.title;
+
+                        }
+                        //get aouthor and date data 
+                        
+                        
+                        let create_date =new Date(value.created_at);
+
+                        let options = { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' };
+                        let formatted_date = create_date.toLocaleDateString('en-US', options);
+
+                        let  month = create_date.toLocaleString('default', { month: 'long' }).slice(0,3);
+                        let   year = create_date.getFullYear().toString().slice(-2);
+                        
+                        //get author data
+                        let user_id ="";
+                        let user_name ="";
+
+                        jQuery.each(value.posters,function(index,value){
+                            if(value.description.includes("Original Poster")){
+                            user_id = value.user_id;
+                                jQuery.each(data.users,function(index,value){
+                                if(value.id == user_id){
+                                    user_name = value.username;
+                                }
+                                })
+                            }
+                        });
+
+                        let temp = '<div class="creator"> <a href="/u/'+ user_name +'/summary" data-auto-route="true" >by :- '+user_name+'</a> <span class="creation_date" > on '+ formatted_date +'</span> </div>';
+
+                        t_html +='<li class="topic_items"> <a href="/t/'+ value.slug +'/'+ value.id +'" role="heading" aria-level="2" class="title" data-topic-id="'+ value.id +'"> '+ t_title+'</a>'+temp+'</li>';
+
+                    }
+                     counter++;
+                }
+            });
+                     }
+            //   if(data.topic_list.topics.length > parseInt(settings.topic_list_count)){
+            // t_html +='<li class="topic_items_load_more"> <p>Load more..</p> </li>';
+            // t_html +='<li class="topic_items_show_less hidden_btn"> <p>Show less..</p> </li>';
+            //  }
+                t_html +="</ul>";     
+                //store html in global scope 
+
+                jQuery(".side-ad-wrapper.recommendations").append(t_html);
+            /*  if(jQuery(".sidebar-section-categories .sidebar-section-link-wrapper a[href*="+c_slug+"]").siblings(".cat_topics").length == 0){
+                cat_item_html[c_slug] = t_html;
+
+                jQuery(".sidebar-section-categories .sidebar-section-link-wrapper a[href*="+c_slug+"]").after(t_html);
+                } */
+
+            /*   if(jQuery(".sidebar-section-categories .sidebar-section-link-wrapper > a[href*="+c_slug+"] .cat_drop_down_icon").length == 0 ){
+                jQuery(".sidebar-section-categories .sidebar-section-link-wrapper > a[href*="+c_slug+"]").append('<span class="cat_drop_down_icon"><svg class="fa d-icon d-icon-angle-down svg-icon svg-string" xmlns="http://www.w3.org/2000/svg"><use href="#angle-down"></use></svg></span>');
+                } */
+            
+            }
+        });
+
+
+    
+ 
+    
+    </script>
+
+    <!-- Add content to side bar for helpfull resources -->
+    <script type="text/x-handlebars" data-template-name="/connectors/side-ad/side_cont">
+        <h3 class="side-title" style="display:none;"> Helpful resources </h3>
+        <div  class="side-ad-wrapper announcements" style="background: red">
+            <div class="side-headeing"><h4>Announcements</h4></div>
+            <div class="side-posts"></div>
+        </div>
+        <div  class="side-ad-wrapper recommendations" style="background: red">
+            <div class="side-headeing"><h4>Recommendations</h4></div>
+            <div class="side-posts"></div>
+        </div>
+    </script>
