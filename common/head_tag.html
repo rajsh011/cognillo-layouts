@@ -151,12 +151,17 @@
                     @connectorTagName="div"
                     @outletArgs={{hash currentPath=this.router._router.currentPath}}
                   />
+
                 </div>
           
                 {{outlet}}
           
                 <CardContainer />
               </div>
+              <PluginOutlet
+                @name="side-ad"
+                @connectorTagName="div"
+            />
             </div>
           
             <PluginOutlet
